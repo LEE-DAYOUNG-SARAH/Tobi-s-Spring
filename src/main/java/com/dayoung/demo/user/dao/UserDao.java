@@ -8,11 +8,21 @@ import java.sql.SQLException;
 import com.dayoung.demo.user.domain.User;
 
 public class UserDao {
+//	private static UserDao INSTANCE;
 	private ConnectionMaker connectionMaker;
+	
+	// 매번 새로운 값으로 바뀌는 정보를 담은 인스턴스 변수
+	private Connection c;
+	private User user;
 	
 	public UserDao(ConnectionMaker connectionMaker) {
 		this.connectionMaker = connectionMaker;
 	}
+	
+//	public static synchronized UserDao getInstance() {
+//		if (INSTANCE == null) INSTANCE = new UseDao(???);
+//		return INSTANCE;
+//	}
 	
 	public void add(User user) throws ClassNotFoundException, SQLException {
 		Connection c = connectionMaker.makeConnection();
@@ -34,15 +44,16 @@ public class UserDao {
 		
 		ResultSet rs = ps.executeQuery();
 		rs.next();
-		User user = new User();
-		user.setId(rs.getString("id"));
-		user.setName(rs.getString("name"));
-		user.setPassword(rs.getString("password"));
+//		User user = new User();
+		this.user = new User();
+		this.user.setId(rs.getString("id"));
+		this.user.setName(rs.getString("name"));
+		this.user.setPassword(rs.getString("password"));
 		
 		rs.close();
 		ps.close();
 		c.close();
 		
-		return user;
+		return this.user;
 	}
 }
