@@ -15,14 +15,19 @@ public class UserDao {
 	private Connection c;
 	private User user;
 	
-	public UserDao(ConnectionMaker connectionMaker) {
-		this.connectionMaker = connectionMaker;
-	}
+//	public UserDao(ConnectionMaker connectionMaker) {
+//		this.connectionMaker = connectionMaker;
+//	}
 	
 //	public static synchronized UserDao getInstance() {
 //		if (INSTANCE == null) INSTANCE = new UseDao(???);
 //		return INSTANCE;
 //	}
+
+	// setter 메서드를 통한 DI
+	public void setConnectionMaker(ConnectionMaker connectionMaker) {
+		this.connectionMaker = connectionMaker;
+	}
 	
 	public void add(User user) throws ClassNotFoundException, SQLException {
 		Connection c = connectionMaker.makeConnection();

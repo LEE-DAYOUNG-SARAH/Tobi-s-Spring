@@ -7,7 +7,10 @@ import org.springframework.context.annotation.Configuration;
 public class DaoFactory {
 	@Bean
 	public UserDao userDao() {
-		return new UserDao(connectionMaker());
+		// setter를 통한 DI 주입
+		UserDao userDao = new UserDao();
+		userDao.setConnectionMaker(connectionMaker());
+		return userDao;
 	}
 	
 	@Bean
