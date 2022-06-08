@@ -7,10 +7,18 @@ import java.sql.SQLException;
 
 import com.dayoung.demo.user.domain.User;
 
+import javax.sql.DataSource;
+
 public class UserDao {
 //	private static UserDao INSTANCE;
-	private ConnectionMaker connectionMaker;
-	
+//	private ConnectionMaker connectionMaker;
+
+	private DataSource dataSource;
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
 	// 매번 새로운 값으로 바뀌는 정보를 담은 인스턴스 변수
 	private Connection c;
 	private User user;
@@ -25,12 +33,13 @@ public class UserDao {
 //	}
 
 	// setter 메서드를 통한 DI
-	public void setConnectionMaker(ConnectionMaker connectionMaker) {
-		this.connectionMaker = connectionMaker;
-	}
+//	public void setConnectionMaker(ConnectionMaker connectionMaker) {
+//		this.connectionMaker = connectionMaker;
+//	}
 	
 	public void add(User user) throws ClassNotFoundException, SQLException {
-		Connection c = connectionMaker.makeConnection();
+//		Connection c = connectionMaker.makeConnection();
+		Connection c = dataSource.getConnection();
 		PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
 		ps.setString(1, user.getId());
 		ps.setString(2, user.getName());
@@ -43,7 +52,8 @@ public class UserDao {
 	}
 	
 	public User get(String id) throws ClassNotFoundException, SQLException {
-		Connection c = connectionMaker.makeConnection();
+//		Connection c = connectionMaker.makeConnection();
+		Connection c = dataSource.getConnection();
 		PreparedStatement ps = c.prepareStatement("select * from users where id=?");
 		ps.setString(1, id);
 		
