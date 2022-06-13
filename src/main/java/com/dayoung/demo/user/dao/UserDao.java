@@ -1,103 +1,65 @@
 package com.dayoung.demo.user.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import com.dayoung.demo.user.domain.User;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
+/**
+ *	중첩 클래스(nested class) => 다른 클래스 내부에 정의되는 클래스
+ *	1. static class(스태틱 클래스) = 독릭접으로 오브젝트 생성 가능한
+ *	2. inner class(내부 클래스) = 자신이 정의된 클래스의 오브젝트 안에서만 만들어 질 수 있음
+ *
+ *  내부 클래스의 범위(scope)에 따른 클래스
+ *  1. member inner class(멤버 내부 클래스) = 멤버 필드처럼 오브젝트 레벨에 정의
+ *  2. local class(로컬 클래스) = 메서드 레벨에 정의
+ *  3. anonymous inner class(익명 내부 클래스) = 이름을 갖지 않는
+ */
 public class UserDao {
-//	private static UserDao INSTANCE;
-//	private ConnectionMaker connectionMaker;
+	private RowMapper<User> userMapper =
+			new RowMapper<User>() {
+				@Override
+				public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+					User user = new User();
+					user.setId(rs.getString("id"));
+					user.setName(rs.getString("name"));
+					user.setPassword(rs.getString("password"));
+					return user;
+				}
+			};
+	private JdbcTemplate jdbcTemplate;
 
-	private DataSource dataSource;
 
 	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
 
-	// 매번 새로운 값으로 바뀌는 정보를 담은 인스턴스 변수
-	private Connection c;
-	private User user;
-	
-//	public UserDao(ConnectionMaker connectionMaker) {
-//		this.connectionMaker = connectionMaker;
-//	}
-	
-//	public static synchronized UserDao getInstance() {
-//		if (INSTANCE == null) INSTANCE = new UseDao(???);
-//		return INSTANCE;
-//	}
 
-	// setter 메서드를 통한 DI
-//	public void setConnectionMaker(ConnectionMaker connectionMaker) {
-//		this.connectionMaker = connectionMaker;
-//	}
-	
-	public void add(User user) throws SQLException {
-//		Connection c = connectionMaker.makeConnection();
-		Connection c = dataSource.getConnection();
-		PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
-		ps.setString(1, user.getId());
-		ps.setString(2, user.getName());
-		ps.setString(3, user.getPassword());
-		
-		ps.executeUpdate();
-		
-		ps.close();
-		c.close();
-	}
-	
-	public User get(String id) throws SQLException {
-		Connection c = dataSource.getConnection();
-		PreparedStatement ps = c.prepareStatement("select * from users where id=?");
-		ps.setString(1, id);
-		
-		ResultSet rs = ps.executeQuery();
-		User user = null;
-		if( rs.next() ) {
-			user = new User();
-			user.setId(rs.getString("id"));
-			user.setName(rs.getString("name"));
-			user.setPassword(rs.getString("password"));
-		}
-
-		rs.close();
-		ps.close();
-		c.close();
-
-		if( user == null ) throw new EmptyResultDataAccessException(1);
-
-		return user;
+	public void add(User user) {
+		this.jdbcTemplate.update("insert into users(id, name, password) values (user.getId(),user.getName(),user.getPassword())");
 	}
 
-	public void deleteAll() throws SQLException {
-		Connection c = dataSource.getConnection();
-
-		PreparedStatement ps = c.prepareStatement("delete from users");
-		ps.executeUpdate();
-
-		ps.close();
-		c.close();
+	public User get(String id) {
+		return this.jdbcTemplate.queryForObject("select * from users where id = ?",
+				new Object[] {id}, this.userMapper);
 	}
 
-	public int getCount() throws SQLException {
-		Connection c = dataSource.getConnection();
-
-		PreparedStatement ps = c.prepareStatement("select count(*) from users");
-
-		ResultSet rs = ps.executeQuery();
-		rs.next();
-		int count = rs.getInt(1);
-
-		rs.close();
-		ps.close();
-		c.close();
-
-		return count;
+	public List<User> getAll() {
+		return this.jdbcTemplate.query("select * from users order by id",
+				this.userMapper);
 	}
+
+	public void deleteAll() {
+		this.jdbcTemplate.update("delete from users");
+	}
+
+
+	public int getCount()  {
+		return this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
+	}
+
 }
